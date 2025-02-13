@@ -170,7 +170,8 @@ if __name__ == "__main__":
         "https://huggingface.co/meta-llama/Llama-3.1-70B-Vision",
         "https://huggingface.co/HKUSTAudio/Llasa-3B",
         "https://huggingface.co/hexgrad/Kokoro-82M",
-        "https://huggingface.co/google/gemma-2-9b-it"
+        "https://huggingface.co/google/gemma-2-9b-it-v1.5"
+        
     ]
     
     create_models_csv(models_to_fetch) 
