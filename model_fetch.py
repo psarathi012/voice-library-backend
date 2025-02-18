@@ -208,6 +208,86 @@ async def get_multiple_models(model_ids: ModelIDs):
             detail=f"Failed to fetch models: {str(e)}"
         )
 
+# Add these classes after your existing ModelIDs class
+class HardwareBase(BaseModel):
+    name: str
+    type: str
+    manufacturer: Optional[str] = None
+    memory: Optional[int] = None
+    performance_score: Optional[float] = None
+    price: Optional[float] = None
+    description: Optional[str] = None
+    specs: Optional[dict] = None
+
+# Add these new endpoints
+@app.get("/hardware")
+async def list_hardware(
+    type: Optional[str] = None,
+    manufacturer: Optional[str] = None,
+    min_memory: Optional[int] = None,
+    limit: int = 10,
+    offset: int = 0
+):
+    """
+    List hardware with optional filters
+    Example: /hardware?type=GPU&manufacturer=NVIDIA&min_memory=32
+    """
+    try:
+        logger.info("Attempting to fetch hardware from Supabase")
+        query = supabase.table('hardware').select("*")
+        
+        if type:
+            query = query.eq('type', type)
+        if manufacturer:
+            query = query.eq('manufacturer', manufacturer)
+        if min_memory:
+            query = query.gte('memory', min_memory)
+            
+        response = query.range(offset, offset + limit - 1).execute()
+        
+        return {
+            "hardware": response.data,
+            "count": len(response.data),
+            "offset": offset,
+            "limit": limit
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching hardware: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/hardware/types")
+async def get_hardware_types():
+    """Get list of available hardware types"""
+    try:
+        response = supabase.table('hardware')\
+            .select('type')\
+            .execute()
+        
+        # Get unique types
+        types = list(set(item['type'] for item in response.data))
+        return {"types": types}
+        
+    except Exception as e:
+        logger.error(f"Error fetching hardware types: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/hardware/manufacturers")
+async def get_manufacturers():
+    """Get list of available manufacturers"""
+    try:
+        response = supabase.table('hardware')\
+            .select('manufacturer')\
+            .execute()
+        
+        # Get unique manufacturers
+        manufacturers = list(set(item['manufacturer'] for item in response.data if item['manufacturer']))
+        return {"manufacturers": manufacturers}
+        
+    except Exception as e:
+        logger.error(f"Error fetching manufacturers: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000) 
