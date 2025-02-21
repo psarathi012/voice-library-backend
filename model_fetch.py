@@ -55,7 +55,6 @@ except Exception as e:
 def read_root():
     return {
         "message": "Welcome to Model Info API",
-        "supabase_url": SUPABASE_URL,
         "connection_status": "connected" if supabase else "disconnected"
     }
 
@@ -80,8 +79,8 @@ async def get_model_info(model_id: str):
         logger.error(f"Error fetching model info: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/models")
-async def list_models(author: Optional[str] = None, limit: int = 10, offset: int = 0):
+@app.post("/models")
+async def list_models(author: Optional[str] = None, limit: int = 10, offset: int = 0, model_ids: Optional[List[str]] = None):
     """
     List all models with optional filtering by author
     Example: /models?author=meta-llama&limit=5
@@ -95,7 +94,10 @@ async def list_models(author: Optional[str] = None, limit: int = 10, offset: int
             raise Exception("Supabase client not initialized")
             
         # Build query
-        query = supabase.table('models').select("*")
+        if not model_ids:
+            query = supabase.table('models').select("*")
+        else:
+            query = supabase.table('models').select("*").in_('model_id', model_ids)
         logger.info("Created base query")
         
         if author:
