@@ -3,3 +3,4 @@ dotenv
 pydantic
 supabase
 uvicorn
+requests
